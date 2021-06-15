@@ -44,7 +44,7 @@ def load_folder(folder, suffix):
 
 
 def load_imageid(folder):
-    images = load_folder(folder, 'jpg')
+    images = load_folder(folder, 'png')
     img_ids = set()
     for img in images:
         img_id = int(img.split('/')[-1].split('.')[0].split('_')[-1])

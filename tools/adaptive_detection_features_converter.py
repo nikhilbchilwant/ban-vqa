@@ -23,6 +23,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import base64
 import csv
 import h5py
+import pickle
 import _pickle as cPickle
 import numpy as np
 import utils
@@ -36,29 +37,44 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def extract(split, infiles, task='vqa'):
-    FIELDNAMES = ['image_id', 'image_w', 'image_h', 'num_boxes', 'boxes', 'features']
-    if task == 'vqa':
+def extract(split, infiles, task='hm'):
+    # FIELDNAMES = ['image_id', 'image_w', 'image_h', 'num_boxes', 'boxes', 'features']
+
+    # VILIO_FIELDNAMES = ["img_id", "img_h", "img_w", "objects_id", "objects_conf",
+    #               "attrs_id", "attrs_conf", "num_boxes", "boxes", "features"]
+
+    FIELDNAMES = ["image_id", "image_h", "image_w", "objects_id", "objects_conf",
+                  "attrs_id", "attrs_conf", "num_boxes", "boxes", "features"]
+    if task == 'hm':
         data_file = {
+            # 'hm_vg10100':'../data/hm_vg10100.hdf5'
             'train': 'data/train.hdf5',
             'val': 'data/val.hdf5',
-            'test': 'data/test2015.hdf5'}
+            'test': 'data/test.hdf5'
+        }
         indices_file = {
+            # 'hm_vg10100':'../data/hm_vg10100_imgid2idx.pkl'
             'train': 'data/train_imgid2idx.pkl',
             'val': 'data/val_imgid2idx.pkl',
-            'test': 'data/test2015_imgid2idx.pkl'}
+            'test': 'data/test_imgid2idx.pkl'
+        }
         ids_file = {
+            # 'hm_vg10100':'../data/hm_vg10100_ids.pkl'
             'train': 'data/train_ids.pkl',
             'val': 'data/val_ids.pkl',
-            'test': 'data/test2015_ids.pkl'}
+            'test': 'data/test_ids.pkl'
+        }
         path_imgs = {
-            'train': 'data/train2014',
-            'val': 'data/val2014',
-            'test': 'data/test2015'}
-        known_num_boxes = {
-            'train': 2643089,
-            'val': 1281164,
-            'test': 2566887,}
+            # 'hm_vg10100': '/nethome/nchilwant/.cache/torch/mmf/data/datasets/hateful_memes/defaults/images/img'
+            'train': '/nethome/nchilwant/.cache/torch/mmf/data/datasets/hateful_memes/defaults/images/img/train',
+            'val': '/nethome/nchilwant/.cache/torch/mmf/data/datasets/hateful_memes/defaults/images/img/val',
+            'test': '/nethome/nchilwant/.cache/torch/mmf/data/datasets/hateful_memes/defaults/images/img/test'
+        }
+        known_num_boxes = {#'hm_vg10100': None
+            'train': None,
+            'val': None,
+            'test': None,
+            }
 
     elif task == 'flickr':
         data_file = {
@@ -90,7 +106,8 @@ def extract(split, infiles, task='vqa'):
         imgids = cPickle.load(open(ids_file[split], 'rb'))
     else:
         imgids = utils.load_imageid(path_imgs[split])
-        cPickle.dump(imgids, open(ids_file[split], 'wb'))
+        with open(ids_file[split], 'wb') as file:
+            pickle.dump(imgids, file)
 
     h = h5py.File(data_file[split], 'w')
 
@@ -189,14 +206,15 @@ def extract(split, infiles, task='vqa'):
 if __name__ == '__main__':
     args = parse_args()
 
-    if args.task == 'vqa':
-        infiles = ['data/trainval/karpathy_test_resnet101_faster_rcnn_genome.tsv',
-            'data/trainval/karpathy_train_resnet101_faster_rcnn_genome.tsv.0',
-            'data/trainval/karpathy_train_resnet101_faster_rcnn_genome.tsv.1',
-            'data/trainval/karpathy_val_resnet101_faster_rcnn_genome.tsv']
+    if args.task == 'hm':
+        infiles = [
+            # 'data/trainval/karpathy_test_resnet101_faster_rcnn_genome.tsv',
+            # 'data/trainval/karpathy_train_resnet101_faster_rcnn_genome.tsv.0',
+            # 'data/trainval/karpathy_train_resnet101_faster_rcnn_genome.tsv.1',
+            # 'data/trainval/karpathy_val_resnet101_faster_rcnn_genome.tsv',
+            'data/hm_vg10100.tsv']
         extract('train', infiles, args.task)
         extract('val', infiles, args.task)
-        infiles = ['data/test2015/test2015_resnet101_faster_rcnn_genome.tsv']
         extract('test', infiles, args.task)
     elif args.task == 'flickr':
         infiles = ['data/flickr30k/train_flickr30k_resnet101_faster_rcnn_genome.tsv.1',
